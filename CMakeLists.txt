@@ -22,8 +22,6 @@ add_subdirectory(lib/zlib EXCLUDE_FROM_ALL)
 
 get_target_property(ZLIB_LIBRARY zlibstatic LIBRARY_OUTPUT_NAME)
 get_target_property(ZLIB_LIBRARY zlibstatic LOCATION)
-message("ZLIB_LIBRARY = " ${ZLIB_LIBRARY})
-
 set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/zlib")
 set(PNG_SHARED OFF CACHE BOOL "Build shared lib"   FORCE)
 set(PNG_STATIC ON CACHE BOOL  "Build static lib"   FORCE)
@@ -104,6 +102,10 @@ source_group("" FILES ${SOURCES} ${HEADERS})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/Shared")
+
+if (MSVC)
+	add_definitions("/D_CRT_SECURE_NO_WARNINGS")
+endif()
 
 add_executable(SchematicToPng
 	${SOURCES}

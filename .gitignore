@@ -16,3 +16,4 @@ Release/
 # Runtime files:
 test/
 list.txt
+logs/

@@ -17,6 +17,8 @@ cBlockImage::cBlockImage(int a_SizeX, int a_SizeY, int a_SizeZ):
 	m_Blocks(new Byte[a_SizeX * a_SizeY * a_SizeZ]),
 	m_Metas(new Byte[a_SizeX * a_SizeY * a_SizeZ])
 {
+	memset(m_Blocks, 0, a_SizeX * a_SizeY * a_SizeZ);
+	memset(m_Metas,  0, a_SizeX * a_SizeY * a_SizeZ);
 }
 
 

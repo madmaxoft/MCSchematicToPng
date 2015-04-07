@@ -316,9 +316,9 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	int StartX = (a_Item.m_StartX == -1) ? 0 : std::min(Width, std::max(a_Item.m_StartX, 0));
 	int StartY = (a_Item.m_StartY == -1) ? 0 : std::min(Height, std::max(a_Item.m_StartY, 0));
 	int StartZ = (a_Item.m_StartZ == -1) ? 0 : std::min(Length, std::max(a_Item.m_StartZ, 0));
-	int EndX = (a_Item.m_EndX == -1) ? Width  : std::min(Width - 1, std::max(a_Item.m_EndX, 0));
-	int EndY = (a_Item.m_EndY == -1) ? Height : std::min(Height - 1, std::max(a_Item.m_EndY, 0));
-	int EndZ = (a_Item.m_EndZ == -1) ? Length : std::min(Length - 1, std::max(a_Item.m_EndZ, 0));
+	int EndX = (a_Item.m_EndX == -1) ? Width  - 1 : std::min(Width - 1, std::max(a_Item.m_EndX, 0));
+	int EndY = (a_Item.m_EndY == -1) ? Height - 1 : std::min(Height - 1, std::max(a_Item.m_EndY, 0));
+	int EndZ = (a_Item.m_EndZ == -1) ? Length - 1 : std::min(Length - 1, std::max(a_Item.m_EndZ, 0));
 	if ((EndX - StartX < 0) || (EndY - StartY < 0) || (EndZ - StartZ < 0))
 	{
 		std::cerr << "The specified dimensions result in an empty area ({"
