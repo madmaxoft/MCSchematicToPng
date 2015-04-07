@@ -6,6 +6,17 @@ project (SchematicToPng)
 # Without this, the MSVC variable isn't defined for MSVC builds ( http://www.cmake.org/pipermail/cmake/2011-November/047130.html )
 enable_language(CXX C)
 
+# Check that the libraries are present:
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/libpng/CMakeLists.txt)
+	message(FATAL_ERROR "libpng is missing in folder lib/libpng. Have you initialized the submodules / downloaded the extra libraries?")
+endif()
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/pngpp/png.hpp)
+	message(FATAL_ERROR "png++ is missing in folder lib/pngpp. Have you initialized the submodules / downloaded the extra libraries?")
+endif()
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/zlib/CMakeLists.txt)
+	message(FATAL_ERROR "zlib is missing in folder lib/zlib. Have you initialized the submodules / downloaded the extra libraries?")
+endif()
+
 # Use static CRT in MSVC builds:
 if (MSVC)
 	string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
