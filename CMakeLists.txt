@@ -6,17 +6,29 @@ project (SchematicToPng)
 # Without this, the MSVC variable isn't defined for MSVC builds ( http://www.cmake.org/pipermail/cmake/2011-November/047130.html )
 enable_language(CXX C)
 
+# Use static CRT in MSVC builds:
+if (MSVC)
+	string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "/MD" "/MT" CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE}")
+	string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}")
+	string(REPLACE "/MDd" "/MTd" CMAKE_C_FLAGS_DEBUG     "${CMAKE_C_FLAGS_DEBUG}")
+endif()
 
-function(flatten_files arg1)
-	set(res "")
-	foreach(f ${${arg1}})
-		get_filename_component(f ${f} ABSOLUTE)
-		list(APPEND res ${f})
-	endforeach()
-	set(${arg1} "${res}" PARENT_SCOPE)
-endfunction()
+# Use Link-Time Code Generation in MSVC release builds:
+if (MSVC)
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /GL")
+	set(CMAKE_EXE_LINKER_FLAGS_RELEASE    "${CMAKE_EXE_LINKER_FLAGS_RELEASE}    /LTCG")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
+	set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /LTCG")
+endif()
 
-
+# Make build use multiple threads under MSVC:
+if (MSVC)
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MP")
+endif()
+		
 # Include the libraries:
 add_subdirectory(lib/zlib EXCLUDE_FROM_ALL)
 
@@ -47,6 +59,15 @@ set(SHARED_HDR
 	src/Shared/StringCompression.h
 	src/Shared/WorldStorage/FastNBT.h
 )
+
+function(flatten_files arg1)
+	set(res "")
+	foreach(f ${${arg1}})
+		get_filename_component(f ${f} ABSOLUTE)
+		list(APPEND res ${f})
+	endforeach()
+	set(${arg1} "${res}" PARENT_SCOPE)
+endfunction()
 
 flatten_files(SHARED_SRC)
 flatten_files(SHARED_HDR)
