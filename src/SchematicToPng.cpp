@@ -229,6 +229,14 @@ bool cSchematicToPng::ProcessPropertyLine(cSchematicToPng::cQueueItem & a_Item, 
 	{
 		StringToInteger(value, a_Item.m_EndZ);
 	}
+	else if (NoCaseCompare(prop, "horzsize") == 0)
+	{
+		StringToInteger(value, a_Item.m_HorzSize);
+	}
+	else if (NoCaseCompare(prop, "vertsize") == 0)
+	{
+		StringToInteger(value, a_Item.m_VertSize);
+	}
 	else
 	{
 		std::cerr << "Unknown property name: " << prop << std::endl;
@@ -362,7 +370,7 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	}
 
 	// Export as PNG image:
-	cPngExporter::Export(Img, a_Item.m_OutputFileName);
+	cPngExporter::Export(Img, a_Item.m_OutputFileName, a_Item.m_HorzSize, a_Item.m_VertSize);
 }
 
 

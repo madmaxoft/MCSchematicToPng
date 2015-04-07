@@ -25,16 +25,18 @@ class cBlockImage;
 class cPngExporter
 {
 public:
-	static void Export(cBlockImage & a_Image, const AString & a_OutFileName);
+	static void Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize);
 
 protected:
 	cBlockImage & m_BlockImage;
+	int m_HorzSize;
+	int m_VertSize;
 	int m_ImgWidth;
 	int m_ImgHeight;
 	png::image<png::rgba_pixel> m_Img;
 
 	/** Creates a new instance based on the BlockImage passed in. */
-	cPngExporter(cBlockImage & a_Image);
+	cPngExporter(cBlockImage & a_Image, int a_HorzSize, int a_VertSize);
 
 	/** Exports m_BlockImage into m_Img and saves it to a file. */
 	void DoExport(const AString & a_OutFileName);

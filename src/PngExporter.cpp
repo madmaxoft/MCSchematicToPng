@@ -12,16 +12,9 @@
 
 
 
-static const int HORZ_SIZE = 16;
-static const int VERT_SIZE = 16;
-
-
-
-
-
-void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName)
+void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize)
 {
-	cPngExporter Exporter(a_Image);
+	cPngExporter Exporter(a_Image, a_HorzSize, a_VertSize);
 	Exporter.DoExport(a_OutFileName);
 }
 
@@ -29,11 +22,13 @@ void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName)
 
 
 
-cPngExporter::cPngExporter(cBlockImage & a_BlockImage):
+cPngExporter::cPngExporter(cBlockImage & a_BlockImage, int a_HorzSize, int a_VertSize):
 	m_BlockImage(a_BlockImage),
-	m_ImgWidth((a_BlockImage.GetSizeX() + a_BlockImage.GetSizeZ()) * HORZ_SIZE),
-	m_ImgHeight(a_BlockImage.GetSizeY() * VERT_SIZE + m_ImgWidth / 2),
-	m_Img(m_ImgWidth + 2, m_ImgHeight + 1)
+	m_HorzSize(a_HorzSize),
+	m_VertSize(a_VertSize),
+	m_ImgWidth((a_BlockImage.GetSizeX() + a_BlockImage.GetSizeZ()) * a_HorzSize + 2),
+	m_ImgHeight(a_BlockImage.GetSizeY() * a_VertSize + m_ImgWidth / 2 ),
+	m_Img(m_ImgWidth, m_ImgHeight)
 {
 }
 
@@ -83,15 +78,15 @@ void cPngExporter::DrawCubesColumn(int a_ColumnX, int a_ColumnZ)
 	int SizeX = m_BlockImage.GetSizeX();
 	int SizeY = m_BlockImage.GetSizeY();
 	int SizeZ = m_BlockImage.GetSizeZ();
-	int BaseX = a_ColumnX * HORZ_SIZE + (SizeZ - a_ColumnZ - 1) * HORZ_SIZE;
-	int BaseY = (SizeX + SizeZ - a_ColumnX - a_ColumnZ - 2) * HORZ_SIZE / 2;
+	int BaseX = a_ColumnX * m_HorzSize + (SizeZ - a_ColumnZ - 1) * m_HorzSize;
+	int BaseY = (SizeX + SizeZ - a_ColumnX - a_ColumnZ - 2) * m_HorzSize / 2;
 
 	for (int y = SizeY - 1; y >= 0; y--)
 	{
 		Byte BlockType;
 		Byte BlockMeta;
 		m_BlockImage.GetBlock(a_ColumnX, SizeY - y - 1, a_ColumnZ, BlockType, BlockMeta);
-		DrawSingleCube(BaseX, BaseY + y * VERT_SIZE, BlockType, BlockMeta);
+		DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta);
 	}
 }
 
@@ -108,32 +103,32 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 	GetBlockColors(a_BlockType, a_BlockMeta, colNormal, colLight, colShadow);
 
 	// Draw the light (top) face:
-	for (int x = 0; x <= HORZ_SIZE; x++)
+	for (int x = 0; x <= m_HorzSize; x++)
 	{
 		for (int y = x / 2; y >= 0; y--)
 		{
-			DrawPixel(a_ImgX + x, a_ImgY + y + HORZ_SIZE / 2, colLight);
-			DrawPixel(a_ImgX + x, a_ImgY - y + HORZ_SIZE / 2, colLight);
-			DrawPixel(a_ImgX + 2 * HORZ_SIZE - x + 1, a_ImgY + y + HORZ_SIZE / 2, colLight);
-			DrawPixel(a_ImgX + 2 * HORZ_SIZE - x + 1, a_ImgY - y + HORZ_SIZE / 2, colLight);
+			DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2, colLight);
+			DrawPixel(a_ImgX + x, a_ImgY - y + m_HorzSize / 2, colLight);
+			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + y + m_HorzSize / 2, colLight);
+			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY - y + m_HorzSize / 2, colLight);
 		}
 	}
 
 	// Draw the normal (left) face:
-	for (int x = 0; x <= HORZ_SIZE; x++)
+	for (int x = 0; x <= m_HorzSize; x++)
 	{
-		for (int y = 1; y <= VERT_SIZE; y++)
+		for (int y = 1; y <= m_VertSize; y++)
 		{
-			DrawPixel(a_ImgX + x, a_ImgY + y + HORZ_SIZE / 2 + x / 2, colNormal);
+			DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2 + x / 2, colNormal);
 		}
 	}
 
 	// Draw the shadow (right) face:
-	for (int x = 0; x <= HORZ_SIZE; x++)
+	for (int x = 0; x <= m_HorzSize; x++)
 	{
-		for (int y = 1; y <= VERT_SIZE; y++)
+		for (int y = 1; y <= m_VertSize; y++)
 		{
-			DrawPixel(a_ImgX + HORZ_SIZE + x + 1, a_ImgY + y + HORZ_SIZE - (x + 1) / 2, colShadow);
+			DrawPixel(a_ImgX + m_HorzSize + x + 1, a_ImgY + y + m_HorzSize - (x + 1) / 2, colShadow);
 		}
 	}
 }

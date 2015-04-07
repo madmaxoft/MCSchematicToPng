@@ -42,6 +42,8 @@ protected:
 		int m_EndY;
 		int m_StartZ;
 		int m_EndZ;
+		int m_HorzSize;
+		int m_VertSize;
 
 		cQueueItem(const AString & a_InputFileName):
 			m_InputFileName(a_InputFileName),
@@ -51,7 +53,9 @@ protected:
 			m_StartY(-1),
 			m_EndY(-1),
 			m_StartZ(-1),
-			m_EndZ(-1)
+			m_EndZ(-1),
+			m_HorzSize(4),
+			m_VertSize(5)
 		{
 		}
 	};
