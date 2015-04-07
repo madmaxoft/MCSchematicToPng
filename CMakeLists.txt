@@ -84,12 +84,14 @@ source_group("Shared\\OSSupport" FILES ${SHARED_OSS_SRC} ${SHARED_OSS_HDR})
 
 # Include the main source files:
 set(SOURCES
+	src/BlockColors.cpp
 	src/BlockImage.cpp
 	src/Globals.cpp
 	src/PngExporter.cpp
 	src/SchematicToPng.cpp
 )
 set(HEADERS
+	src/BlockColors.h
 	src/BlockImage.h
 	src/Globals.h
 	src/PngExporter.h

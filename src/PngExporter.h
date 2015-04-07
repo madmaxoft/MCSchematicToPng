@@ -48,6 +48,9 @@ protected:
 	/** Draws a single cube into the specified position in m_Img. */
 	void DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte a_BlockMeta);
 
+	/** Sets the specified pixel to the specified color. */
+	void DrawPixel(int a_X, int a_Y, const png::rgba_pixel & a_Color);
+
 	/** Returns the colors to be used for the specified block type. */
 	void GetBlockColors(
 		Byte a_BlockType, Byte a_BlockMeta,

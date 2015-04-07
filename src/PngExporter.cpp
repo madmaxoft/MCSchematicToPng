@@ -6,6 +6,7 @@
 #include "Globals.h"
 #include "PngExporter.h"
 #include "BlockImage.h"
+#include "BlockColors.h"
 
 
 
@@ -111,10 +112,10 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 	{
 		for (int y = x / 2; y >= 0; y--)
 		{
-			m_Img[a_ImgY + y + HORZ_SIZE / 2][a_ImgX + x] = colLight;
-			m_Img[a_ImgY - y + HORZ_SIZE / 2][a_ImgX + x] = colLight;
-			m_Img[a_ImgY + y + HORZ_SIZE / 2][a_ImgX + 2 * HORZ_SIZE - x + 1] = colLight;
-			m_Img[a_ImgY - y + HORZ_SIZE / 2][a_ImgX + 2 * HORZ_SIZE - x + 1] = colLight;
+			DrawPixel(a_ImgX + x, a_ImgY + y + HORZ_SIZE / 2, colLight);
+			DrawPixel(a_ImgX + x, a_ImgY - y + HORZ_SIZE / 2, colLight);
+			DrawPixel(a_ImgX + 2 * HORZ_SIZE - x + 1, a_ImgY + y + HORZ_SIZE / 2, colLight);
+			DrawPixel(a_ImgX + 2 * HORZ_SIZE - x + 1, a_ImgY - y + HORZ_SIZE / 2, colLight);
 		}
 	}
 
@@ -123,7 +124,7 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 	{
 		for (int y = 1; y <= VERT_SIZE; y++)
 		{
-			m_Img[a_ImgY + y + HORZ_SIZE / 2 + x / 2][a_ImgX + x] = colNormal;
+			DrawPixel(a_ImgX + x, a_ImgY + y + HORZ_SIZE / 2 + x / 2, colNormal);
 		}
 	}
 
@@ -132,9 +133,19 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 	{
 		for (int y = 1; y <= VERT_SIZE; y++)
 		{
-			m_Img[a_ImgY + y + HORZ_SIZE - (x + 1) / 2][a_ImgX + HORZ_SIZE + x + 1] = colShadow;
+			DrawPixel(a_ImgX + HORZ_SIZE + x + 1, a_ImgY + y + HORZ_SIZE - (x + 1) / 2, colShadow);
 		}
 	}
+}
+
+
+
+
+
+void cPngExporter::DrawPixel(int a_X, int a_Y, const png::rgba_pixel & a_Color)
+{
+	// TODO: Perform color mixing for transparent blocks
+	m_Img[a_Y][a_X] = a_Color;
 }
 
 
@@ -146,8 +157,8 @@ void cPngExporter::GetBlockColors(
 	png::rgba_pixel & a_NormalColor, png::rgba_pixel & a_LightColor, png::rgba_pixel & a_ShadowColor
 )
 {
-	// TODO: Look up the block color in a LUT:
-	a_NormalColor = png::rgba_pixel(a_BlockType, a_BlockMeta, 0);
+	// Look up the block color in a LUT:
+	a_NormalColor = g_BlockColors[a_BlockType][a_BlockMeta];
 
 	// Automatically create the highlight and shadow colors:
 	a_LightColor = png::rgba_pixel(
