@@ -95,6 +95,7 @@ source_group("Shared" FILES ${SHARED_SRC} ${SHARED_HDR})
 
 set(SHARED_OSS_SRC
 	src/Shared/OSSupport/CriticalSection.cpp
+	src/Shared/OSSupport/Errors.cpp
 	src/Shared/OSSupport/Event.cpp
 	src/Shared/OSSupport/File.cpp
 	src/Shared/OSSupport/GZipFile.cpp
@@ -104,6 +105,7 @@ set(SHARED_OSS_SRC
 
 set(SHARED_OSS_HDR
 	src/Shared/OSSupport/CriticalSection.h
+	src/Shared/OSSupport/Errors.h
 	src/Shared/OSSupport/Event.h
 	src/Shared/OSSupport/File.h
 	src/Shared/OSSupport/GZipFile.h
