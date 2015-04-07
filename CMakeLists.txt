@@ -41,6 +41,7 @@ if (MSVC)
 endif()
 		
 # Include the libraries:
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/lib/zlib")
 add_subdirectory(lib/zlib EXCLUDE_FROM_ALL)
 
 get_target_property(ZLIB_LIBRARY zlibstatic LIBRARY_OUTPUT_NAME)
@@ -49,10 +50,10 @@ set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/zlib")
 set(PNG_SHARED OFF CACHE BOOL "Build shared lib"   FORCE)
 set(PNG_STATIC ON CACHE BOOL  "Build static lib"   FORCE)
 set(PNG_TESTS  OFF CACHE BOOL "Build libpng tests" FORCE)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/lib/libpng")
 add_subdirectory(lib/libpng EXCLUDE_FROM_ALL)
-include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/lib/libpng")
-include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/lib/pngpp")
-include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/lib/libpng")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/libpng")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/pngpp")
 
 # Include the shared files:
 set(SHARED_SRC
