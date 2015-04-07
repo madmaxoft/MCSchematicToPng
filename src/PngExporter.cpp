@@ -159,12 +159,14 @@ void cPngExporter::GetBlockColors(
 	a_LightColor = png::rgba_pixel(
 		a_NormalColor.red   + (0xff - a_NormalColor.red)   / 3,
 		a_NormalColor.green + (0xff - a_NormalColor.green) / 3,
-		a_NormalColor.blue  + (0xff - a_NormalColor.blue)  / 3
+		a_NormalColor.blue  + (0xff - a_NormalColor.blue)  / 3,
+		a_NormalColor.alpha
 	);
 	a_ShadowColor = png::rgba_pixel(
 		2 * a_NormalColor.red   / 3,
 		2 * a_NormalColor.green / 3,
-		2 * a_NormalColor.blue  / 3
+		2 * a_NormalColor.blue  / 3,
+		a_NormalColor.alpha
 	);
 }
 

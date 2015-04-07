@@ -363,7 +363,7 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 			{
 				int idx = StartX + x + (StartZ + z) * Width + (StartY + y) * Width * Length;
 				Byte BlockType = Blocks[idx];
-				Byte BlockMeta = ((idx % 2) == 0) ? (Metas[idx / 2] & 0x0f) : (Metas[idx / 2] >> 4);
+				Byte BlockMeta = Metas[idx] & 0x0f;
 				Img.SetBlock(x, y, z, BlockType, BlockMeta);
 			}
 		}
