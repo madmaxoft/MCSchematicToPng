@@ -1,0 +1,10 @@
+[submodule "lib/pngpp"]
+	path = lib/pngpp
+	url = https://github.com/madmaxoft/pngpp.git
+[submodule "lib/libpng"]
+	path = lib/libpng
+	url = http://git.code.sf.net/p/libpng/code
+	branch = libpng15
+[submodule "lib/zlib"]
+	path = lib/zlib
+	url = https://github.com/madmaxoft/zlib.git

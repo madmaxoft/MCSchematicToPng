@@ -1,0 +1,18 @@
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Visual Studio files:
+*.vcxproj
+*.sln
+*.filters
+*.user
+*.suo
+*.sdf
+*.opensdf
+Debug/
+Release/
+
+# Runtime files:
+test/
+list.txt
