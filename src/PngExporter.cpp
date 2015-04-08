@@ -106,13 +106,15 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 	// Draw the light (top) face:
 	for (int x = 0; x <= m_HorzSize; x++)
 	{
-		for (int y = x / 2; y >= 0; y--)
+		for (int y = x / 2; y > 0; y--)
 		{
 			DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2, colLight);
 			DrawPixel(a_ImgX + x, a_ImgY - y + m_HorzSize / 2, colLight);
 			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + y + m_HorzSize / 2, colLight);
 			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY - y + m_HorzSize / 2, colLight);
 		}
+		DrawPixel(a_ImgX + x, a_ImgY + m_HorzSize / 2, colLight);
+		DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + m_HorzSize / 2, colLight);
 	}
 
 	// Draw the normal (left) face:
@@ -140,8 +142,21 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 
 void cPngExporter::DrawPixel(int a_X, int a_Y, const png::rgba_pixel & a_Color)
 {
-	// TODO: Perform color mixing for transparent blocks
-	m_Img[a_Y][a_X] = a_Color;
+	// Perform color mixing for transparent blocks:
+	// Src.: http://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
+	png::rgba_pixel current = m_Img[a_Y][a_X];
+	png::byte alpha = a_Color.alpha + current.alpha * (255 - a_Color.alpha) / 255;
+	if (alpha == 0)
+	{
+		m_Img[a_Y][a_X] = png::rgba_pixel(0, 0, 0, 0);
+	}
+	else
+	{
+		png::byte r = (a_Color.red   * a_Color.alpha + current.red   * current.alpha * (255 - a_Color.alpha) / 255) / alpha;
+		png::byte g = (a_Color.green * a_Color.alpha + current.green * current.alpha * (255 - a_Color.alpha) / 255) / alpha;
+		png::byte b = (a_Color.blue  * a_Color.alpha + current.blue  * current.alpha * (255 - a_Color.alpha) / 255) / alpha;
+		m_Img[a_Y][a_X] = png::rgba_pixel(r, g, b, alpha);
+	}
 }
 
 
