@@ -81,11 +81,12 @@ void cPngExporter::DrawCubesColumn(int a_ColumnX, int a_ColumnZ)
 	int BaseX = a_ColumnX * m_HorzSize + (SizeZ - a_ColumnZ - 1) * m_HorzSize;
 	int BaseY = (SizeX + SizeZ - a_ColumnX - a_ColumnZ - 2) * m_HorzSize / 2;
 
+	int BlockX = SizeX - a_ColumnX - 1;
 	for (int y = SizeY - 1; y >= 0; y--)
 	{
 		Byte BlockType;
 		Byte BlockMeta;
-		m_BlockImage.GetBlock(a_ColumnX, SizeY - y - 1, a_ColumnZ, BlockType, BlockMeta);
+		m_BlockImage.GetBlock(BlockX, SizeY - y - 1, a_ColumnZ, BlockType, BlockMeta);
 		DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta);
 	}
 }
