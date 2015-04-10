@@ -78,6 +78,31 @@ void cBlockImage::GetBlock(int a_BlockX, int a_BlockY, int a_BlockZ, Byte & a_Bl
 
 
 
+void cBlockImage::RotateCCW(void)
+{
+	cBlockImage res(m_SizeZ, m_SizeY, m_SizeX);
+	for (int y = 0; y < m_SizeY; y++)
+	{
+		for (int x = 0; x < m_SizeX; x++)
+		{
+			for (int z = 0; z < m_SizeZ; z++)
+			{
+				Byte BlockType;
+				Byte BlockMeta;
+				GetBlock(x, y, z, BlockType, BlockMeta);
+				res.SetBlock(z, y, m_SizeX - x - 1, BlockType, BlockMeta);
+			}
+		}
+	}
+	std::swap(res.m_Blocks, m_Blocks);
+	std::swap(res.m_Metas, m_Metas);
+	std::swap(m_SizeX, m_SizeZ);
+}
+
+
+
+
+
 int cBlockImage::GetIndex(int a_BlockX, int a_BlockY, int a_BlockZ)
 {
 	ASSERT(a_BlockX >= 0);

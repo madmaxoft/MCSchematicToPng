@@ -237,6 +237,16 @@ bool cSchematicToPng::ProcessPropertyLine(cSchematicToPng::cQueueItem & a_Item, 
 	{
 		StringToInteger(value, a_Item.m_VertSize);
 	}
+	else if (NoCaseCompare(prop, "numccwrotations") == 0)
+	{
+		StringToInteger(value, a_Item.m_NumCCWRotations);
+	}
+	else if (NoCaseCompare(prop, "numcwrotations") == 0)
+	{
+		int NumCWRotations;
+		StringToInteger(value, NumCWRotations);
+		a_Item.m_NumCCWRotations = (4 - (NumCWRotations % 4)) % 4;
+	}
 	else
 	{
 		std::cerr << "Unknown property name: " << prop << std::endl;
@@ -367,6 +377,12 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 				Img.SetBlock(x, y, z, BlockType, BlockMeta);
 			}
 		}
+	}
+
+	// Apply the rotations:
+	for (int i = 0; i < a_Item.m_NumCCWRotations; i++)
+	{
+		Img.RotateCCW();
 	}
 
 	// Export as PNG image:

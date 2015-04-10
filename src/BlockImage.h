@@ -17,6 +17,7 @@ class cBlockImage
 {
 public:
 	cBlockImage(int a_SizeX, int a_SizeY, int a_SizeZ);
+	cBlockImage(const cBlockImage & a_Other) = delete;
 	~cBlockImage();
 
 	void SetBlock(int a_BlockX, int a_BlockY, int a_BlockZ, Byte a_BlockType, Byte a_BlockMeta);
@@ -27,6 +28,9 @@ public:
 	int GetSizeX(void) const { return m_SizeX; }
 	int GetSizeY(void) const { return m_SizeY; }
 	int GetSizeZ(void) const { return m_SizeZ; }
+
+	/** Rotates the block data counter-clockwise. */
+	void RotateCCW(void);
 
 protected:
 	int m_SizeX;
