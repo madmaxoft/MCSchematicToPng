@@ -82,19 +82,24 @@ void cPngExporter::DrawCubesColumn(int a_ColumnX, int a_ColumnZ)
 	int BaseY = (SizeX + SizeZ - a_ColumnX - a_ColumnZ - 2) * m_HorzSize / 2;
 
 	int BlockX = SizeX - a_ColumnX - 1;
+	int BlockZ = a_ColumnZ;
 	for (int y = SizeY - 1; y >= 0; y--)
 	{
 		Byte BlockType;
 		Byte BlockMeta;
-		m_BlockImage.GetBlock(BlockX, SizeY - y - 1, a_ColumnZ, BlockType, BlockMeta);
-		DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta);
+		int BlockY = SizeY - y - 1;
+		m_BlockImage.GetBlock(BlockX, BlockY, BlockZ, BlockType, BlockMeta);
+		bool DrawTopFace   = (BlockY >= SizeY - 1) || (m_BlockImage.GetBlockType(BlockX, BlockY + 1, BlockZ) != BlockType);
+		bool DrawLeftFace  = (BlockX >= SizeX - 1) || (m_BlockImage.GetBlockType(BlockX + 1, BlockY, BlockZ) != BlockType);
+		bool DrawRightFace = (BlockZ == 0)         || (m_BlockImage.GetBlockType(BlockX, BlockY, BlockZ - 1) != BlockType);
+		DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta, DrawTopFace, DrawLeftFace, DrawRightFace);
 	}
 }
 
 
 
 
-void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte a_BlockMeta)
+void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte a_BlockMeta, bool a_DrawTopFace, bool a_DrawLeftFace, bool a_DrawRightFace)
 {
 	if (a_BlockType == 0)
 	{
@@ -104,34 +109,43 @@ void cPngExporter::DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte
 	GetBlockColors(a_BlockType, a_BlockMeta, colNormal, colLight, colShadow);
 
 	// Draw the light (top) face:
-	for (int x = 0; x <= m_HorzSize; x++)
+	if (a_DrawTopFace)
 	{
-		for (int y = x / 2; y > 0; y--)
+		for (int x = 1; x <= m_HorzSize; x++)
 		{
-			DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2, colLight);
-			DrawPixel(a_ImgX + x, a_ImgY - y + m_HorzSize / 2, colLight);
-			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + y + m_HorzSize / 2, colLight);
-			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY - y + m_HorzSize / 2, colLight);
+			for (int y = x / 2; y > 0; y--)
+			{
+				DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2, colLight);
+				DrawPixel(a_ImgX + x, a_ImgY - y + m_HorzSize / 2, colLight);
+				DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + y + m_HorzSize / 2, colLight);
+				DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY - y + m_HorzSize / 2, colLight);
+			}
+			DrawPixel(a_ImgX + x, a_ImgY + m_HorzSize / 2, colLight);
+			DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + m_HorzSize / 2, colLight);
 		}
-		DrawPixel(a_ImgX + x, a_ImgY + m_HorzSize / 2, colLight);
-		DrawPixel(a_ImgX + 2 * m_HorzSize - x + 1, a_ImgY + m_HorzSize / 2, colLight);
 	}
 
 	// Draw the normal (left) face:
-	for (int x = 0; x <= m_HorzSize; x++)
+	if (a_DrawLeftFace)
 	{
-		for (int y = 1; y <= m_VertSize; y++)
+		for (int x = 1; x <= m_HorzSize; x++)
 		{
-			DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2 + x / 2, colNormal);
+			for (int y = 1; y <= m_VertSize; y++)
+			{
+				DrawPixel(a_ImgX + x, a_ImgY + y + m_HorzSize / 2 + x / 2, colNormal);
+			}
 		}
 	}
 
 	// Draw the shadow (right) face:
-	for (int x = 0; x <= m_HorzSize; x++)
+	if (a_DrawRightFace)
 	{
-		for (int y = 1; y <= m_VertSize; y++)
+		for (int x = 0; x < m_HorzSize; x++)
 		{
-			DrawPixel(a_ImgX + m_HorzSize + x + 1, a_ImgY + y + m_HorzSize - (x + 1) / 2, colShadow);
+			for (int y = 1; y <= m_VertSize; y++)
+			{
+				DrawPixel(a_ImgX + m_HorzSize + x + 1, a_ImgY + y + m_HorzSize - (x + 1) / 2, colShadow);
+			}
 		}
 	}
 }

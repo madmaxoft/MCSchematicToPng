@@ -48,7 +48,7 @@ protected:
 	void DrawCubesColumn(int a_ColumnX, int a_ColumnZ);
 
 	/** Draws a single cube into the specified position in m_Img. */
-	void DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte a_BlockMeta);
+	void DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte a_BlockMeta, bool a_DrawTopFace, bool a_DrawLeftFace, bool a_DrawRightFace);
 
 	/** Sets the specified pixel to the specified color. */
 	void DrawPixel(int a_X, int a_Y, const png::rgba_pixel & a_Color);
