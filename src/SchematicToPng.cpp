@@ -178,13 +178,14 @@ void cSchematicToPng::ProcessQueueFile(std::istream & a_File)
 bool cSchematicToPng::ProcessPropertyLine(cSchematicToPng::cQueueItem & a_Item, const AString & a_PropertyLine)
 {
 	// Find the property being set:
-	auto propEnd = a_PropertyLine.find_first_of(" \t=:");
+	auto propStart = a_PropertyLine.find_first_not_of(" \t");
+	auto propEnd = a_PropertyLine.find_first_of(" \t=:", propStart);
 	if (propEnd == AString::npos)
 	{
 		std::cerr << "Invalid property specification: " << a_PropertyLine << std::endl;
 		return false;
 	}
-	auto prop = a_PropertyLine.substr(0, propEnd);
+	auto prop = a_PropertyLine.substr(propStart, propEnd - propStart);
 	if (prop.empty())
 	{
 		std::cerr << "Invalid property name: " << a_PropertyLine << std::endl;
