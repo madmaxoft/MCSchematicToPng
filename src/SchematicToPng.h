@@ -10,6 +10,7 @@
 #pragma once
 
 #include <iostream>
+#include "Marker.h"
 
 
 
@@ -45,6 +46,7 @@ protected:
 		int m_HorzSize;
 		int m_VertSize;
 		int m_NumCCWRotations;
+		cMarkerPtrs m_Markers;
 
 		cQueueItem(const AString & a_InputFileName):
 			m_InputFileName(a_InputFileName),
@@ -102,9 +104,6 @@ protected:
 	/** The number of threads that should be started. Configurable on the command line. */
 	int m_NumThreads;
 	
-	/** If set to true, the chunk data is recompressed while saving each MCA file. */
-	bool m_ShouldRecompress;
-	
 	
 	/** Retrieves one item from the queue (and removes it from the queue).
 	Returns nullptr when queue empty. */
@@ -113,8 +112,13 @@ protected:
 	/** Processes a file with the queue list into m_Queue. */
 	void ProcessQueueFile(std::istream & a_File);
 
-	/** Applies the property specified in a_PropertyLine to the specified queue item. */
+	/** Applies the property specified in a_PropertyLine to the specified queue item.
+	Returns true if successful, outputs message to stderr and returns false on error. */
 	bool ProcessPropertyLine(cQueueItem & a_Item, const AString & a_PropertyLine);
+
+	/** Adds a new marker, specified by text in a_MarkerValue, into a_Item.
+	Returns true if successful, outputs message to stderr and returns false on error. */
+	bool AddMarker(cQueueItem & a_Item, const AString & a_MarkerValue);
 } ;
 
 

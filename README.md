@@ -14,13 +14,15 @@ MCSchematicToPng --
 ```
 reads stdin as the listfile and converts using 4 threads (default)
 
-Listfile is a simple text file that lists the .schematic files to be converted, and the properties for each export. If a line starts with non-whitespace, it is considered a filename to convert. If a line starts with a whitespace (tab, space etc) it is considered a property for the last file. Properties can specify different output filename, cropping, size of the isometric tile and (future) rotation.
+Listfile is a simple text file that lists the .schematic files to be converted, and the properties for each export. If a line starts with non-whitespace, it is considered a filename to convert. If a line starts with a whitespace (tab, space etc) it is considered a property for the last file. Properties can specify different output filename, cropping, size of the isometric tile and rotation. Additional (vector-based) markers can be output at any valid block position
 Example:
 ```
 file1.schematic
   outfile: large file1.png
   horzsize: 16
   vertsize: 20
+  marker: 0, 0, 0, BottomArrowXM
+  marker: 5, 8, 3, Cube
 
 file1.schematic
   outfile: medium file1.png
@@ -47,4 +49,4 @@ file3.schematic
   startx: 2
   endx: 2
 ```
-This converts file1.schematic into three PNG files according to the properties specified, file2.schematic into a PNG file with the default properties, and three slices of file3.schematic into three separate PNG files.
+This converts file1.schematic into three PNG files according to the properties specified, file2.schematic into a PNG file with the default properties, and three slices of file3.schematic into three separate PNG files. The `large file1.png` additionally gets two markers.

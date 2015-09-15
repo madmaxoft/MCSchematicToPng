@@ -7,14 +7,15 @@
 #include "PngExporter.h"
 #include "BlockImage.h"
 #include "BlockColors.h"
+#include "Marker.h"
 
 
 
 
 
-void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize)
+void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers)
 {
-	cPngExporter Exporter(a_Image, a_HorzSize, a_VertSize);
+	cPngExporter Exporter(a_Image, a_HorzSize, a_VertSize, a_Markers);
 	Exporter.DoExport(a_OutFileName);
 }
 
@@ -22,13 +23,14 @@ void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName, 
 
 
 
-cPngExporter::cPngExporter(cBlockImage & a_BlockImage, int a_HorzSize, int a_VertSize):
+cPngExporter::cPngExporter(cBlockImage & a_BlockImage, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers):
 	m_BlockImage(a_BlockImage),
 	m_HorzSize(a_HorzSize),
 	m_VertSize(a_VertSize),
 	m_ImgWidth((a_BlockImage.GetSizeX() + a_BlockImage.GetSizeZ()) * a_HorzSize + 2),
 	m_ImgHeight(a_BlockImage.GetSizeY() * a_VertSize + m_ImgWidth / 2 ),
-	m_Img(m_ImgWidth, m_ImgHeight)
+	m_Img(m_ImgWidth, m_ImgHeight),
+	m_Markers(a_Markers)
 {
 }
 
@@ -92,9 +94,30 @@ void cPngExporter::DrawCubesColumn(int a_ColumnX, int a_ColumnZ)
 		bool DrawTopFace   = (BlockY >= SizeY - 1) || (m_BlockImage.GetBlockType(BlockX, BlockY + 1, BlockZ) != BlockType);
 		bool DrawLeftFace  = (BlockX >= SizeX - 1) || (m_BlockImage.GetBlockType(BlockX + 1, BlockY, BlockZ) != BlockType);
 		bool DrawRightFace = (BlockZ == 0)         || (m_BlockImage.GetBlockType(BlockX, BlockY, BlockZ - 1) != BlockType);
+		DrawMarkersInCube(BaseX, BaseY + y * m_VertSize, BlockX, BlockY, BlockZ);
 		DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta, DrawTopFace, DrawLeftFace, DrawRightFace);
 	}
 }
+
+
+
+
+void cPngExporter::DrawMarkersInCube(int a_ImgX, int a_ImgY, int a_BlockX, int a_BlockY, int a_BlockZ)
+{
+	// Draw all markers that are in the specified block:
+	for (const auto m: m_Markers)
+	{
+		if (
+			(m->GetX() == a_BlockX) &&
+			(m->GetY() == a_BlockY) &&
+			(m->GetZ() == a_BlockZ)
+		)
+		{
+			m->Draw(m_Img, a_ImgX, a_ImgY, m_HorzSize, m_VertSize);
+		}
+	}  // for m - m_Markers[]
+}
+
 
 
 

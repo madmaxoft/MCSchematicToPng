@@ -191,6 +191,66 @@ bool StringToInteger(const AString & a_str, T & a_Num)
 	return true;
 }
 
+
+
+
+
+/** Parses any integer type. Checks bounds and returns errors out of band. */
+template <class T>
+bool HexStringToInteger(const AString & a_Str, T & a_Num)
+{
+	T result = 0;
+	for (size_t i = 0, size = a_Str.size(); i < size; i++)
+	{
+		T digit;
+		switch (a_Str[i])
+		{
+			case '0': digit = 0; break;
+			case '1': digit = 1; break;
+			case '2': digit = 2; break;
+			case '3': digit = 3; break;
+			case '4': digit = 4; break;
+			case '5': digit = 5; break;
+			case '6': digit = 6; break;
+			case '7': digit = 7; break;
+			case '8': digit = 8; break;
+			case '9': digit = 9; break;
+			case 'a': digit = 10; break;
+			case 'b': digit = 11; break;
+			case 'c': digit = 12; break;
+			case 'd': digit = 13; break;
+			case 'e': digit = 14; break;
+			case 'f': digit = 15; break;
+			case 'A': digit = 10; break;
+			case 'B': digit = 11; break;
+			case 'C': digit = 12; break;
+			case 'D': digit = 13; break;
+			case 'E': digit = 14; break;
+			case 'F': digit = 15; break;
+			default:
+			{
+				return false;
+			}
+		}
+		if (std::numeric_limits<T>::max() / 16 < result)
+		{
+			return false;
+		}
+		result *= 16;
+		if (std::numeric_limits<T>::max() - digit < result)
+		{
+			return false;
+		}
+		result += digit;
+	}
+	a_Num = result;
+	return true;
+}
+
+
+
+
+
 // If you have any other string helper functions, declare them here
 
 

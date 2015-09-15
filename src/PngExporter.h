@@ -17,6 +17,9 @@
 
 // fwd:
 class cBlockImage;
+class cMarker;
+typedef std::shared_ptr<cMarker> cMarkerPtr;
+typedef std::vector<cMarkerPtr> cMarkerPtrs;
 
 
 
@@ -25,7 +28,7 @@ class cBlockImage;
 class cPngExporter
 {
 public:
-	static void Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize);
+	static void Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers);
 
 protected:
 	cBlockImage & m_BlockImage;
@@ -35,8 +38,11 @@ protected:
 	int m_ImgHeight;
 	png::image<png::rgba_pixel> m_Img;
 
+	/** Vector of all markers to be drawn, sorted by the draw-index. */
+	const cMarkerPtrs & m_Markers;
+
 	/** Creates a new instance based on the BlockImage passed in. */
-	cPngExporter(cBlockImage & a_Image, int a_HorzSize, int a_VertSize);
+	cPngExporter(cBlockImage & a_Image, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers);
 
 	/** Exports m_BlockImage into m_Img and saves it to a file. */
 	void DoExport(const AString & a_OutFileName);
@@ -49,6 +55,10 @@ protected:
 
 	/** Draws a single cube into the specified position in m_Img. */
 	void DrawSingleCube(int a_ImgX, int a_ImgY, Byte a_BlockType, Byte a_BlockMeta, bool a_DrawTopFace, bool a_DrawLeftFace, bool a_DrawRightFace);
+
+	/** Draws all markers from m_Markers that are in the specified block coords.
+	Uses and updates m_CurrentMarkerIdx in order to speed up the search for markers to be drawn. */
+	void DrawMarkersInCube(int a_ImgX, int a_ImgY, int a_BlockX, int a_BlockY, int a_BlockZ);
 
 	/** Sets the specified pixel to the specified color. */
 	void DrawPixel(int a_X, int a_Y, const png::rgba_pixel & a_Color);

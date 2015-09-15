@@ -58,8 +58,7 @@ int main(int argc, char ** argv)
 // cSchematicToPng:
 
 cSchematicToPng::cSchematicToPng(void) :
-	m_NumThreads(4),
-	m_ShouldRecompress(true)
+	m_NumThreads(4)
 {
 }
 
@@ -248,12 +247,68 @@ bool cSchematicToPng::ProcessPropertyLine(cSchematicToPng::cQueueItem & a_Item, 
 		StringToInteger(value, NumCWRotations);
 		a_Item.m_NumCCWRotations = (4 - (NumCWRotations % 4)) % 4;
 	}
+	else if (NoCaseCompare(prop, "marker") == 0)
+	{
+		return AddMarker(a_Item, value);
+	}
 	else
 	{
 		std::cerr << "Unknown property name: " << prop << std::endl;
 		return false;
 	}
 
+	return true;
+}
+
+
+
+
+
+bool cSchematicToPng::AddMarker(cSchematicToPng::cQueueItem & a_Item, const AString & a_MarkerValue)
+{
+	// a_MarkerValue format should be: "x, y, z, shape, [color, params...]"
+
+	// Split the marker value into components:
+	auto split = StringSplitAndTrim(a_MarkerValue, ",;");
+	if (split.size() < 4)
+	{
+		std::cerr << "Invalid marker specification: \"" << a_MarkerValue << "\"." << std::endl;
+		return false;
+	}
+
+	// Parse the coords:
+	int x, y, z;
+	if (
+		!StringToInteger(split[0], x) ||
+		!StringToInteger(split[1], y) ||
+		!StringToInteger(split[2], z)
+	)
+	{
+		std::cerr << "Invalid marker coords in \"" << a_MarkerValue << "\"." << std::endl;
+		return false;
+	}
+
+	// Parse the color, if present:
+	int Color = -1;
+	if (split.size() == 5)
+	{
+		if (!HexStringToInteger(split[4], Color))
+		{
+			std::cerr << "Invalid marker color specification in : \"" << a_MarkerValue << "\". Using default marker color." << std::endl;
+			Color = -1;
+		}
+	}
+
+	// Check that the marker shape is known:
+	auto shape = cMarkerShape::GetShapeForName(split[3]);
+	if (shape == nullptr)
+	{
+		std::cerr << "Unknown marker shape in \"" << a_MarkerValue << "\"." << std::endl;
+		return false;
+	}
+
+	// Add the marker:
+	a_Item.m_Markers.push_back(std::make_shared<cMarker>(x, y, z, shape, Color));
 	return true;
 }
 
@@ -387,7 +442,7 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	}
 
 	// Export as PNG image:
-	cPngExporter::Export(Img, a_Item.m_OutputFileName, a_Item.m_HorzSize, a_Item.m_VertSize);
+	cPngExporter::Export(Img, a_Item.m_OutputFileName, a_Item.m_HorzSize, a_Item.m_VertSize, a_Item.m_Markers);
 }
 
 
