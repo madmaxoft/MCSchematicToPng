@@ -14,6 +14,9 @@
 #include "BlockImage.h"
 #include "PngExporter.h"
 
+#ifndef INVALID_SOCKET
+	#define INVALID_SOCKET static_cast<SOCKET>(-1)
+#endif
 
 
 
@@ -31,22 +34,22 @@ int main(int argc, char ** argv)
 	cLogger::cListener * fileLogListener = new cFileListener();
 	cLogger::GetInstance().AttachListener(consoleLogListener);
 	cLogger::GetInstance().AttachListener(fileLogListener);
-	
+
 	cLogger::InitiateMultithreading();
-	
+
 	cSchematicToPng App;
 	if (!App.Init(argc, argv))
 	{
 		return 1;
 	}
-	
+
 	App.Run();
-	
+
 	cLogger::GetInstance().DetachListener(consoleLogListener);
 	delete consoleLogListener;
 	cLogger::GetInstance().DetachListener(fileLogListener);
 	delete fileLogListener;
-	
+
 	return 0;
 }
 
@@ -58,7 +61,8 @@ int main(int argc, char ** argv)
 // cSchematicToPng:
 
 cSchematicToPng::cSchematicToPng(void) :
-	m_NumThreads(4)
+	m_NumThreads(4),
+	m_KeepRunning(false)
 {
 }
 
@@ -68,6 +72,17 @@ cSchematicToPng::cSchematicToPng(void) :
 
 bool cSchematicToPng::Init(int argc, char ** argv)
 {
+	// On Windows, need to initialize networking:
+	#ifdef _WIN32
+	WSADATA wsad;
+	auto res = WSAStartup(0x0202, &wsad);
+	if (res != 0)
+	{
+		LOG("WSAStartup failed: %d", res);
+		return false;
+	}
+	#endif  // _WIN32
+
 	for (int i = 1; i < argc; i++)
 	{
 		if (argv[i][0] == '-')
@@ -80,9 +95,26 @@ bool cSchematicToPng::Init(int argc, char ** argv)
 				}
 				i++;
 			}
-			else if (NoCaseCompare(argv[i], "--") == 0)
+			else if ((NoCaseCompare(argv[i], "-net") == 0) && (i < argc - 1))
 			{
-				ProcessQueueFile(std::cin);
+				UInt16 Port;
+				if (!StringToInteger(argv[i + 1], Port))
+				{
+					std::cerr << "Cannot parse port number from parameter " << argv[i + 1] << std::endl;
+				}
+				else
+				{
+					StartNetServer(Port);
+				}
+				i++;
+				m_KeepRunning = true;
+			}
+			else if (
+				(strcmp(argv[i], "-") == 0) ||
+				(strcmp(argv[i], "--") == 0)
+			)
+			{
+				ProcessQueueStream(std::make_shared<cIosInputStream>(std::cin));
 			}
 			else
 			{
@@ -92,7 +124,7 @@ bool cSchematicToPng::Init(int argc, char ** argv)
 		else
 		{
 			std::ifstream f(argv[i]);
-			ProcessQueueFile(f);
+			ProcessQueueStream(std::make_shared<cIosInputStream>(f));
 		}
 	}
 	return true;
@@ -111,7 +143,7 @@ void cSchematicToPng::Run(void)
 		m_Threads.push_back(Thread);
 		Thread->Start();
 	}
-	
+
 	// Wait for all the threads to finish:
 	while (!m_Threads.empty())
 	{
@@ -126,9 +158,16 @@ void cSchematicToPng::Run(void)
 cSchematicToPng::cQueueItemPtr cSchematicToPng::GetNextQueueItem(void)
 {
 	cCSLock Lock(m_CS);
-	if (m_Queue.empty())
+	while (m_Queue.empty())
 	{
-		return nullptr;
+		if (!m_KeepRunning)
+		{
+			// Return an empty item to kill the thread
+			return nullptr;
+		}
+		// We should run forever, wait for a new item to arrive into the queue:
+		cCSUnlock Unlock(Lock);
+		m_evtQueue.Wait();
 	}
 	auto res = m_Queue.back();
 	m_Queue.pop_back();
@@ -139,34 +178,63 @@ cSchematicToPng::cQueueItemPtr cSchematicToPng::GetNextQueueItem(void)
 
 
 
-void cSchematicToPng::ProcessQueueFile(std::istream & a_File)
+void cSchematicToPng::ProcessQueueStream(cInputStreamPtr a_Input)
 {
 	AString line;
 	cQueueItemPtr current;
-	for (int lineNum = 1; a_File.good(); lineNum++)
+	for (int lineNum = 1;; lineNum++)
 	{
-		std::getline(a_File, line);
+		if (!a_Input->GetLine(line))
+		{
+			break;
+		}
 		if (line.empty())
 		{
 			continue;
 		}
 		if (line[0] <= ' ')
 		{
+			if (line == "\x04")  // EOT char, Ctrl+D
+			{
+				// Push the previously parsed item into the queue:
+				if (current != nullptr)
+				{
+					cCSLock Lock(m_CS);
+					m_Queue.push_back(current);
+					m_evtQueue.Set();
+					current.reset();
+				}
+				continue;
+			}
 			if (current == nullptr)
 			{
-				std::cerr << "Error on line " << lineNum << ": Defining properties without a preceding input file." << std::endl;
+				a_Input->LineError("Defining properties without a preceding input file.");
 				return;
 			}
-			if (!ProcessPropertyLine(*current, line.substr(1)))
+			if (!ProcessPropertyLine(a_Input, *current, line.substr(1)))
 			{
 				return;
 			}
 		}
 		else
 		{
-			current = std::make_shared<cQueueItem>(line);
-			m_Queue.push_back(current);
+			// Push the previously parsed item into the queue:
+			if (current != nullptr)
+			{
+				cCSLock Lock(m_CS);
+				m_Queue.push_back(current);
+				m_evtQueue.Set();
+			}
+
+			// Create a new item for which to parse properties:
+			current = std::make_shared<cQueueItem>(line, a_Input);
 		}
+	}
+
+	if (current != nullptr)
+	{
+		cCSLock Lock(m_CS);
+		m_Queue.push_back(current);
 	}
 }
 
@@ -174,20 +242,20 @@ void cSchematicToPng::ProcessQueueFile(std::istream & a_File)
 
 
 
-bool cSchematicToPng::ProcessPropertyLine(cSchematicToPng::cQueueItem & a_Item, const AString & a_PropertyLine)
+bool cSchematicToPng::ProcessPropertyLine(cInputStreamPtr a_Input, cSchematicToPng::cQueueItem & a_Item, const AString & a_PropertyLine)
 {
 	// Find the property being set:
 	auto propStart = a_PropertyLine.find_first_not_of(" \t");
 	auto propEnd = a_PropertyLine.find_first_of(" \t=:", propStart);
 	if (propEnd == AString::npos)
 	{
-		std::cerr << "Invalid property specification: " << a_PropertyLine << std::endl;
+		a_Input->LineError(Printf("Invalid property specification in line \"%s\"", a_PropertyLine.c_str()));
 		return false;
 	}
 	auto prop = a_PropertyLine.substr(propStart, propEnd - propStart);
 	if (prop.empty())
 	{
-		std::cerr << "Invalid property name: " << a_PropertyLine << std::endl;
+		a_Input->LineError(Printf("Invalid property name in line \"%s\"", a_PropertyLine.c_str()));
 		return false;
 	}
 	auto value = a_PropertyLine.substr(propEnd + 1, AString::npos);
@@ -253,7 +321,7 @@ bool cSchematicToPng::ProcessPropertyLine(cSchematicToPng::cQueueItem & a_Item, 
 	}
 	else
 	{
-		std::cerr << "Unknown property name: " << prop << std::endl;
+		a_Input->LineError(Printf("Unknown property name: \"%s\"", prop.c_str()));
 		return false;
 	}
 
@@ -352,13 +420,13 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	cGZipFile f;
 	if (!f.Open(a_Item.m_InputFileName, cGZipFile::fmRead))
 	{
-		std::cerr << "Cannot open file " << a_Item.m_InputFileName << " for reading!" << std::endl;
+		a_Item.m_ErrorOut->Error(Printf("Cannot open file %s for reading!", a_Item.m_InputFileName.c_str()));
 		return;
 	}
 	AString contents;
 	if (f.ReadRestOfFile(contents) < 0)
 	{
-		std::cerr << "Cannot read file " << a_Item.m_InputFileName << "!" << std::endl;
+		a_Item.m_ErrorOut->Error(Printf("Cannot read file %s!", a_Item.m_InputFileName.c_str()));
 		return;
 	}
 
@@ -366,7 +434,7 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	cParsedNBT nbt(contents.data(), contents.size());
 	if (!nbt.IsValid())
 	{
-		std::cerr << "Cannot parse input file " << a_Item.m_InputFileName << "!" << std::endl;
+		a_Item.m_ErrorOut->Error(Printf("Cannot parse input file %s!", a_Item.m_InputFileName.c_str()));
 		return;
 	}
 	int tHeight = nbt.FindChildByName(0, "Height");
@@ -379,7 +447,7 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 		(nbt.GetType(tWidth) != TAG_Short)
 	)
 	{
-		std::cerr << "File " << a_Item.m_InputFileName << " doesn't contain dimensions!" << std::endl;
+		a_Item.m_ErrorOut->Error(Printf("File %s doesn't contain dimensions!", a_Item.m_InputFileName.c_str()));
 		return;
 	}
 	int Height = nbt.GetShort(tHeight);
@@ -395,13 +463,13 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	int EndZ = (a_Item.m_EndZ == -1) ? Length - 1 : std::min(Length - 1, std::max(a_Item.m_EndZ, 0));
 	if ((EndX - StartX < 0) || (EndY - StartY < 0) || (EndZ - StartZ < 0))
 	{
-		std::cerr << "The specified dimensions result in an empty area ({"
-			<< EndX - StartX << ", " << EndY - StartY << ", " << EndZ - StartZ
-			<< "}) in file " << a_Item.m_InputFileName << "!" << std::endl;
+		a_Item.m_ErrorOut->Error(Printf("The specified dimensions result in an empty area ({%d, %d, %d}) in file %s!",
+			EndX - StartX, EndY - StartY, EndZ - StartZ, a_Item.m_InputFileName.c_str()
+		));
 		return;
 	}
 
-	// Get the pointers to block data in the NBT:	
+	// Get the pointers to block data in the NBT:
 	int tBlocks = nbt.FindChildByName(0, "Blocks");
 	int tMetas = nbt.FindChildByName(0, "Data");
 	if (
@@ -410,7 +478,7 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 		(nbt.GetType(tMetas)  != TAG_ByteArray)
 	)
 	{
-		std::cerr << "File " << a_Item.m_InputFileName << " doesn't contain block data or meta data!" << std::endl;
+		a_Item.m_ErrorOut->Error(Printf("File %s doesn't contain block data or meta data!", a_Item.m_InputFileName.c_str()));
 		return;
 	}
 	auto Blocks = reinterpret_cast<const Byte *>(nbt.GetData(tBlocks));
@@ -445,6 +513,58 @@ void cSchematicToPng::cThread::ProcessItem(const cSchematicToPng::cQueueItem & a
 	cPngExporter::Export(Img, a_Item.m_OutputFileName, a_Item.m_HorzSize, a_Item.m_VertSize, a_Item.m_Markers);
 }
 
+
+
+
+
+void cSchematicToPng::StartNetServer(UInt16 a_Port)
+{
+	SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+	if (s == INVALID_SOCKET)
+	{
+		LOG("Cannot create socket on port %d", a_Port);
+		return;
+	}
+	sockaddr_in sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sin_family = AF_INET;
+	sa.sin_port = htons(a_Port);
+	if (bind(s, reinterpret_cast<const sockaddr *>(&sa), sizeof(sa)) != 0)
+	{
+		LOG("Cannot bind socket to port %d", a_Port);
+		return;
+	}
+	if (listen(s, 0) != 0)
+	{
+		LOG("Cannot listen on port %d", a_Port);
+		return;
+	}
+	m_NetAcceptThread = std::thread(std::bind(&cSchematicToPng::NetAcceptThread, this, s));
+	LOG("Port %d is open for incoming connections.", a_Port);
+}
+
+
+
+
+
+void cSchematicToPng::NetAcceptThread(SOCKET s)
+{
+	SOCKET n;
+	sockaddr_storage sa;
+	socklen_t salen = static_cast<socklen_t>(sizeof(sa));
+	AString WelcomeMsg = "MCSchematicToPng\n1\n";
+	while ((n = accept(s, reinterpret_cast<sockaddr *>(&sa), &salen)) != INVALID_SOCKET)
+	{
+		LOG("Accepted a new network connection");
+
+		// Send the welcome message to the socket:
+		send(n, WelcomeMsg.data(), WelcomeMsg.size(), 0);
+
+		// Create a new thread that parses queue items out from the socket:
+		auto thr = std::thread(std::bind(&cSchematicToPng::ProcessQueueStream, this, std::make_shared<cSocketInputStream>(n)));
+		thr.detach();
+	}
+}
 
 
 

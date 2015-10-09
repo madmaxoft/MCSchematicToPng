@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include <iostream>
 #include "Marker.h"
+#include "InputStream.h"
 
 
 
@@ -47,8 +47,9 @@ protected:
 		int m_VertSize;
 		int m_NumCCWRotations;
 		cMarkerPtrs m_Markers;
+		cInputStreamPtr m_ErrorOut;
 
-		cQueueItem(const AString & a_InputFileName):
+		cQueueItem(const AString & a_InputFileName, cInputStreamPtr a_ErrorOut):
 			m_InputFileName(a_InputFileName),
 			m_OutputFileName(cFile::ChangeFileExt(a_InputFileName, "png")),
 			m_StartX(-1),
@@ -59,7 +60,8 @@ protected:
 			m_EndZ(-1),
 			m_HorzSize(4),
 			m_VertSize(5),
-			m_NumCCWRotations(0)
+			m_NumCCWRotations(0),
+			m_ErrorOut(a_ErrorOut)
 		{
 		}
 	};
@@ -87,38 +89,57 @@ protected:
 		// cIsThread overrides:
 		virtual void Execute(void) override;
 	} ;
-	
+
 	typedef std::shared_ptr<cThread> cThreadPtr;
 	typedef std::vector<cThreadPtr> cThreadPtrs;
-	
-	
+
+
 	/** The mutex protecting m_Queue agains multithreaded access. */
 	cCriticalSection m_CS;
-	
+
 	/** The queue of schematic files to be processed by the threads. Protected by m_CS. */
 	cQueueItemPtrs m_Queue;
-	
+
+	/** Event that is set each time a new item arrives into m_Queue. */
+	cEvent m_evtQueue;
+
 	/** List of threads that the server has running. */
 	cThreadPtrs m_Threads;
-	
+
 	/** The number of threads that should be started. Configurable on the command line. */
 	int m_NumThreads;
-	
-	
+
+	/** The thread that accepts incoming connections in the network-daemon mode. */
+	std::thread m_NetAcceptThread;
+
+	/** Iff true, the main thread is kept running forever.
+	Used for network-daemon mode. */
+	bool m_KeepRunning;
+
+
 	/** Retrieves one item from the queue (and removes it from the queue).
 	Returns nullptr when queue empty. */
 	cQueueItemPtr GetNextQueueItem(void);
 
-	/** Processes a file with the queue list into m_Queue. */
-	void ProcessQueueFile(std::istream & a_File);
+	/** Processes a stream with the queue list into m_Queue. */
+	void ProcessQueueStream(cInputStreamPtr a_Input);
 
 	/** Applies the property specified in a_PropertyLine to the specified queue item.
 	Returns true if successful, outputs message to stderr and returns false on error. */
-	bool ProcessPropertyLine(cQueueItem & a_Item, const AString & a_PropertyLine);
+	bool ProcessPropertyLine(cInputStreamPtr a_Input, cQueueItem & a_Item, const AString & a_PropertyLine);
 
 	/** Adds a new marker, specified by text in a_MarkerValue, into a_Item.
 	Returns true if successful, outputs message to stderr and returns false on error. */
 	bool AddMarker(cQueueItem & a_Item, const AString & a_MarkerValue);
+
+	/** Starts a server on the specified port that listens for connections and processes the text received on them as input file. */
+	void StartNetServer(UInt16 a_Port);
+
+	/** Accepts connections incoming on the specified socket and creates a new SocketInputThread for each such connection. */
+	void NetAcceptThread(SOCKET s);
+
+	/** Reads input from the socket and processes it as input file. */
+	void NetInputThread(SOCKET s);
 } ;
 
 

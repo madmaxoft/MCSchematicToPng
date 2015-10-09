@@ -138,6 +138,7 @@ set(SOURCES
 	src/BlockColors.cpp
 	src/BlockImage.cpp
 	src/Globals.cpp
+	src/InputStream.cpp
 	src/Marker.cpp
 	src/PngExporter.cpp
 	src/SchematicToPng.cpp
@@ -146,6 +147,7 @@ set(HEADERS
 	src/BlockColors.h
 	src/BlockImage.h
 	src/Globals.h
+	src/InputStream.h
 	src/Marker.h
 	src/PngExporter.h
 	src/SchematicToPng.h
