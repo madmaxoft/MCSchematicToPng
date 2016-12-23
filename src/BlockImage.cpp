@@ -27,8 +27,8 @@ cBlockImage::cBlockImage(int a_SizeX, int a_SizeY, int a_SizeZ):
 
 cBlockImage::~cBlockImage()
 {
-	delete m_Metas;
-	delete m_Blocks;
+	delete[] m_Metas;
+	delete[] m_Blocks;
 }
 
 
