@@ -194,13 +194,53 @@ cMarkerShapeNames & cMarkerShape::GetNameMap(void)
 			std::make_shared<cShape3DTriangle>(1, 0.5, 0.5,  0.5, 0.5, 1,    0.5, 0.5, 0,   0x000000),
 			std::make_shared<cShape3DTriangle>(0, 0.5, 0.6,  0,   0.5, 0.4,  1,   0.5, 0.5, 0x000000),
 		}));
+		ShapeNames["ArrowYM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DTriangle>(1,   0.5, 0,    0,   0.5, 1,    0.5, 0, 0.5, 0x000000),
+			std::make_shared<cShape3DTriangle>(0.4, 1,   0.6,  0.6, 1,   0.4,  0.5, 0, 0.5, 0x000000),
+		}));
+		ShapeNames["ArrowYMCornerXMZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(0, 0, 0,   0.5, 0.5, 0,     0x000000),
+			std::make_shared<cShape3DLine>(0, 0, 0,   0,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(0, 0, 0,   0,     1, 0,     0x000000),
+		}));
+		ShapeNames["ArrowYMCornerXMZP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(0, 0, 1,   0.5, 0.5, 1,     0x000000),
+			std::make_shared<cShape3DLine>(0, 0, 1,   0,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(0, 0, 1,   0,   1,   1,     0x000000),
+		}));
+		ShapeNames["ArrowYMCornerXPZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(1, 0, 0,   0.5, 0.5, 0,     0x000000),
+			std::make_shared<cShape3DLine>(1, 0, 0,   1,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(1, 0, 0,   1,   1,   0,     0x000000),
+		}));
+		ShapeNames["ArrowYMCornerXPZP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(1, 0, 1,   0.5, 0.5, 1,     0x000000),
+			std::make_shared<cShape3DLine>(1, 0, 1,   1,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(1, 0, 1,   1,   1,   1,     0x000000),
+		}));
 		ShapeNames["ArrowYP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
 			std::make_shared<cShape3DTriangle>(1,   0.5, 0,    0,   0.5, 1,    0.5, 1, 0.5, 0x000000),
 			std::make_shared<cShape3DTriangle>(0.4, 0,   0.6,  0.6, 0,   0.4,  0.5, 1, 0.5, 0x000000),
 		}));
-		ShapeNames["ArrowYM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
-			std::make_shared<cShape3DTriangle>(1,   0.5, 0,    0,   0.5, 1,    0.5, 0, 0.5, 0x000000),
-			std::make_shared<cShape3DTriangle>(0.4, 1,   0.6,  0.6, 1,   0.4,  0.5, 0, 0.5, 0x000000),
+		ShapeNames["ArrowYPCornerXMZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(0, 1, 0,   0.5, 0.5, 0,     0x000000),
+			std::make_shared<cShape3DLine>(0, 1, 0,   0,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(0, 0, 0,   0,   1,   0,     0x000000),
+		}));
+		ShapeNames["ArrowYPCornerXMZP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(0, 1, 1,   0.5, 0.5, 1,     0x000000),
+			std::make_shared<cShape3DLine>(0, 1, 1,   0,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(0, 0, 1,   0,   1,   1,     0x000000),
+		}));
+		ShapeNames["ArrowYPCornerXPZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(1, 1, 0,   0.5, 0.5, 0,     0x000000),
+			std::make_shared<cShape3DLine>(1, 1, 0,   1,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(1, 0, 0,   1,   1,   0,     0x000000),
+		}));
+		ShapeNames["ArrowYPCornerXPZP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(1, 1, 1,   0.5, 0.5, 1,     0x000000),
+			std::make_shared<cShape3DLine>(1, 1, 1,   1,   0.5, 0.5,   0x000000),
+			std::make_shared<cShape3DLine>(1, 0, 1,   1,   1,   1,     0x000000),
 		}));
 		ShapeNames["ArrowZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
 			std::make_shared<cShape3DTriangle>(0.5, 0.5, 0,  1,   0.5, 0.5,  0,   0.5, 0.5,   0x000000),
