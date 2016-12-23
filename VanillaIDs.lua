@@ -12,10 +12,10 @@ generate the src/BlockColors.cpp file.
 
 
 
---- Converts the text color representation into a png::rgba_pixel() constructor call
+--- Converts the text color representation ("#rrggbb" hex) into a png::rgba_pixel() constructor call
 -- Returns a string in the form "rgba_pixel(<red>, <green>, <blue>, <alpha>)"
 local function colorToPngPixel(a_Color, a_Alpha)
-	a_Color = string.lower(a_Color):sub(1, 6)
+	a_Color = string.lower(a_Color):sub(2, 7)
 	a_Alpha = tonumber(a_Alpha)
 	if (string.len(a_Color) ~= 6) then
 		print("Bad color format: '" .. a_Color .. "'.")
@@ -119,7 +119,7 @@ for blockType = 0, 255 do
 			end
 			if (color == nil) then
 				-- Special case with air - it doesn't have its color specified
-				color = "000000"
+				color = "#000000"
 			end
 			ins(values, colorToPngPixel(color, alpha or 0))
 		end  -- for blockMeta

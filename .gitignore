@@ -2,6 +2,9 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 
+# Generated source file sources:
+vanilla_ids.json
+
 # Visual Studio files:
 *.vcxproj
 *.sln
