@@ -10,6 +10,42 @@
 
 
 
+/** Draws a single-pixel line in the specified image, using the specified color. */
+static void Draw2DLine(png::image<png::rgba_pixel> & a_Image, int a_X1, int a_Y1, int a_X2, int a_Y2, png::rgba_pixel a_Color)
+{
+	int dx = abs(a_X1 - a_X2), sx = (a_X2 < a_X1) ? 1 : -1;
+	int dy = abs(a_Y1 - a_Y2), sy = (a_Y2 < a_Y1) ? 1 : -1;
+	int err = ((dx > dy) ? dx : -dy) / 2, e2;
+	auto height = static_cast<int>(a_Image.get_height());
+	auto width = static_cast<int>(a_Image.get_width());
+	for (;;)
+	{
+		if ((a_X2 >= 0) && (a_X2 < width) && (a_Y2 >= 0) && (a_Y2 < height))
+		{
+			a_Image.set_pixel(a_X2, a_Y2, a_Color);
+		}
+		if ((a_X2 == a_X1) && (a_Y2 == a_Y1))
+		{
+			break;
+		}
+		e2 = err;
+		if (e2 > -dx)
+		{
+			err -= dy;
+			a_X2 += sx;
+		}
+		if (e2 < dy)
+		{
+			err += dx;
+			a_Y2 += sy;
+		}
+	}
+}
+
+
+
+
+
 void cShape::Project3D(double a_X, double a_Y, double a_Z, int a_HorzSize, int a_VertSize, int & a_OutX, int & a_OutY)
 {
 	a_OutX = static_cast<int>((1 - a_Z - a_X + 1)  * a_HorzSize);
@@ -57,28 +93,7 @@ void cShape3DLine::Draw(png::image<png::rgba_pixel> & a_Image, int a_ImgX, int a
 	png::rgba_pixel col = GetColor(a_Color);
 
 	// Draw 2D line:
-  int dx = abs(X1 - X2), sx = (X2 < X1) ? 1 : -1;
-  int dy = abs(Y1 - Y2), sy = (Y2 < Y1) ? 1 : -1; 
-  int err = ((dx > dy) ? dx : -dy) / 2, e2;
-  for (;;)
-	{
-		a_Image.set_pixel(X2, Y2, col);
-    if ((X2 == X1) && (Y2 == Y1))
-		{
-			break;
-		}
-    e2 = err;
-    if (e2 > -dx)
-		{
-			err -= dy;
-			X2 += sx;
-		}
-    if (e2 < dy)
-		{
-			err += dx;
-			Y2 += sy;
-		}
-  }
+	Draw2DLine(a_Image, X1, Y1, X2, Y2, col);
 }
 
 
@@ -183,6 +198,14 @@ cMarkerShape::cMarkerShape(std::initializer_list<cShapePtr> a_Shapes):
 cMarkerShapeNames & cMarkerShape::GetNameMap(void)
 {
 	static cMarkerShapeNames ShapeNames;
+
+	// Coords for the letters (in a 3x3 grid):
+	static const double L = 0.75;  // X / Z coord for left
+	static const double R = 0.25;  // X / Z coord for right
+	static const double C = 0.5;   // X / Z coord for center
+	static const double T = 1;     // Y coord for top
+	static const double B = 0;     // Y coord for bottom
+	static const double M = 0.5;   // Y coord for middle
 	if (ShapeNames.empty())
 	{
 		// First use, initialize the map:
@@ -195,8 +218,9 @@ cMarkerShapeNames & cMarkerShape::GetNameMap(void)
 			std::make_shared<cShape3DTriangle>(0, 0.5, 0.6,  0,   0.5, 0.4,  1,   0.5, 0.5, 0x000000),
 		}));
 		ShapeNames["ArrowYM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
-			std::make_shared<cShape3DTriangle>(1,   0.5, 0,    0,   0.5, 1,    0.5, 0, 0.5, 0x000000),
-			std::make_shared<cShape3DTriangle>(0.4, 1,   0.6,  0.6, 1,   0.4,  0.5, 0, 0.5, 0x000000),
+			std::make_shared<cShape3DLine>(0.5, 0, 0.5,   0,   0.5, 0,     0x000000),
+			std::make_shared<cShape3DLine>(0.5, 0, 0.5,   1,   0.5, 1,     0x000000),
+			std::make_shared<cShape3DLine>(0.5, 0, 0.5,   0.5, 1,   0.5,   0x000000),
 		}));
 		ShapeNames["ArrowYMCornerXMZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
 			std::make_shared<cShape3DLine>(0, 0, 0,   0.5, 0.5, 0,     0x000000),
@@ -219,8 +243,9 @@ cMarkerShapeNames & cMarkerShape::GetNameMap(void)
 			std::make_shared<cShape3DLine>(1, 0, 1,   1,   1,   1,     0x000000),
 		}));
 		ShapeNames["ArrowYP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
-			std::make_shared<cShape3DTriangle>(1,   0.5, 0,    0,   0.5, 1,    0.5, 1, 0.5, 0x000000),
-			std::make_shared<cShape3DTriangle>(0.4, 0,   0.6,  0.6, 0,   0.4,  0.5, 1, 0.5, 0x000000),
+			std::make_shared<cShape3DLine>(0.5, 1, 0.5,   0,   0.5, 0,     0x000000),
+			std::make_shared<cShape3DLine>(0.5, 1, 0.5,   1,   0.5, 1,     0x000000),
+			std::make_shared<cShape3DLine>(0.5, 1, 0.5,   0.5, 0,   0.5,   0x000000),
 		}));
 		ShapeNames["ArrowYPCornerXMZM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
 			std::make_shared<cShape3DLine>(0, 1, 0,   0.5, 0.5, 0,     0x000000),
@@ -283,6 +308,152 @@ cMarkerShapeNames & cMarkerShape::GetNameMap(void)
 			std::make_shared<cShape3DLine>(1, 1, 1, 1, 1, 0, 0x000000),
 			std::make_shared<cShape3DLine>(1, 1, 1, 1, 0, 1, 0x000000),
 			std::make_shared<cShape3DLine>(1, 1, 1, 0, 1, 1, 0x000000),
+		}));
+		ShapeNames["LetterA"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, M, R,   L, M, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, T, R,   L, T, L,   0x000000),
+		}));
+		ShapeNames["LetterB"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, T, R,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   R, B, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterC"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterD"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   C, T, C,   0x000000),
+			std::make_shared<cShape3DLine>(C, T, C,   R, M, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, M, R,   C, B, C,   0x000000),
+			std::make_shared<cShape3DLine>(C, B, C,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterE"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterF"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   C, M, C,   0x000000),
+		}));
+		ShapeNames["LetterG"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, M, R,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   R, M, R,   0x000000),
+		}));
+		ShapeNames["LetterH"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   R, M, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterI"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(C, B, C,   C, T, C,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, B, L,   R, B, R,   0x000000),
+		}));
+		ShapeNames["LetterJ"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, M, R,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, M, R,   C, T, C,   0x000000),
+			std::make_shared<cShape3DLine>(C, B, C,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterK"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, T, R,   L, M, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   R, B, R,   0x000000),
+		}));
+		ShapeNames["LetterL"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterM"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterN"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, B, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterO"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterP"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, T, R,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   C, M, C,   0x000000),
+		}));
+		ShapeNames["LetterQ"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   R, B, R,   0x000000),
+		}));
+		ShapeNames["LetterR"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, T, R,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   C, M, C,   0x000000),
+		}));
+		ShapeNames["LetterS"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   L, M, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, M, L,   R, M, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, M, R,   R, B, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
+		}));
+		ShapeNames["LetterT"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(C, B, C,   C, T, C,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterU"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterV"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, T, L,   C, B, C,   0x000000),
+			std::make_shared<cShape3DLine>(C, B, C,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterW"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   L, T, L,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   L, B, L,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   R, B, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterX"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, T, L,   R, B, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, B, L,   R, T, R,   0x000000),
+		}));
+		ShapeNames["LetterY"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, T, L,   C, M, C,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(C, M, C,   C, B, C,   0x000000),
+		}));
+		ShapeNames["LetterZ"] = std::make_shared<cMarkerShape>(std::initializer_list<cShapePtr>({
+			std::make_shared<cShape3DLine>(L, B, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(L, T, L,   R, T, R,   0x000000),
+			std::make_shared<cShape3DLine>(R, B, R,   L, B, L,   0x000000),
 		}));
 		// TODO: Other shapes
 	}
