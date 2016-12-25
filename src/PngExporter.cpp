@@ -85,17 +85,26 @@ void cPngExporter::DrawCubesColumn(int a_ColumnX, int a_ColumnZ)
 
 	int BlockX = SizeX - a_ColumnX - 1;
 	int BlockZ = a_ColumnZ;
-	for (int y = SizeY - 1; y >= 0; y--)
+	for (int y = SizeY; y >= -1; y--)
 	{
 		Byte BlockType;
 		Byte BlockMeta;
 		int BlockY = SizeY - y - 1;
-		m_BlockImage.GetBlock(BlockX, BlockY, BlockZ, BlockType, BlockMeta);
-		bool DrawTopFace   = (BlockY >= SizeY - 1) || (m_BlockImage.GetBlockType(BlockX, BlockY + 1, BlockZ) != BlockType);
-		bool DrawLeftFace  = (BlockX >= SizeX - 1) || (m_BlockImage.GetBlockType(BlockX + 1, BlockY, BlockZ) != BlockType);
-		bool DrawRightFace = (BlockZ == 0)         || (m_BlockImage.GetBlockType(BlockX, BlockY, BlockZ - 1) != BlockType);
-		DrawMarkersInCube(BaseX, BaseY + y * m_VertSize, BlockX, BlockY, BlockZ);
-		DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta, DrawTopFace, DrawLeftFace, DrawRightFace);
+		if ((BlockY >= 0) && (BlockY < SizeY))
+		{
+			// Inside block range, draw both blocks and markers:
+			m_BlockImage.GetBlock(BlockX, BlockY, BlockZ, BlockType, BlockMeta);
+			bool DrawTopFace   = (BlockY >= SizeY - 1) || (m_BlockImage.GetBlockType(BlockX, BlockY + 1, BlockZ) != BlockType);
+			bool DrawLeftFace  = (BlockX >= SizeX - 1) || (m_BlockImage.GetBlockType(BlockX + 1, BlockY, BlockZ) != BlockType);
+			bool DrawRightFace = (BlockZ == 0)         || (m_BlockImage.GetBlockType(BlockX, BlockY, BlockZ - 1) != BlockType);
+			DrawMarkersInCube(BaseX, BaseY + y * m_VertSize, BlockX, BlockY, BlockZ);
+			DrawSingleCube(BaseX, BaseY + y * m_VertSize, BlockType, BlockMeta, DrawTopFace, DrawLeftFace, DrawRightFace);
+		}
+		else
+		{
+			// Outside block range, draw only markers:
+			DrawMarkersInCube(BaseX, BaseY + y * m_VertSize, BlockX, BlockY, BlockZ);
+		}
 	}
 }
 
