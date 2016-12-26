@@ -28,7 +28,11 @@ typedef std::vector<cMarkerPtr> cMarkerPtrs;
 class cPngExporter
 {
 public:
+	/** Exports the specified block image, using the sizes and markers, to the specified file. */
 	static void Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers);
+
+	/** Exports the specified block image, using the sizes and markers, and returns the PNG image data as a string. */
+	static AString Export(cBlockImage & a_Image, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers);
 
 protected:
 	cBlockImage & m_BlockImage;
@@ -44,8 +48,8 @@ protected:
 	/** Creates a new instance based on the BlockImage passed in. */
 	cPngExporter(cBlockImage & a_Image, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers);
 
-	/** Exports m_BlockImage into m_Img and saves it to a file. */
-	void DoExport(const AString & a_OutFileName);
+	/** Exports m_BlockImage into m_Img and saves it to a string, which it returns. */
+	AString DoExport();
 
 	/** Draws all the cubes comprising the block image into m_Img, in the correct order. */
 	void DrawCubes(void);

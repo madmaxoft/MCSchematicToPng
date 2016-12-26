@@ -5,6 +5,7 @@
 
 #include "Globals.h"
 #include "PngExporter.h"
+#include <sstream>
 #include "BlockImage.h"
 #include "BlockColors.h"
 #include "Marker.h"
@@ -15,8 +16,25 @@
 
 void cPngExporter::Export(cBlockImage & a_Image, const AString & a_OutFileName, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers)
 {
+	auto data = Export(a_Image, a_HorzSize, a_VertSize, a_Markers);
+	cFile f;
+	if (!f.Open(a_OutFileName, cFile::fmWrite))
+	{
+		LOGWARNING("Cannot open file %s for writing", a_OutFileName.c_str());
+		return;
+	}
+	f.Write(data.data(), data.size());
+	f.Close();
+}
+
+
+
+
+
+AString cPngExporter::Export(cBlockImage & a_Image, int a_HorzSize, int a_VertSize, const cMarkerPtrs & a_Markers)
+{
 	cPngExporter Exporter(a_Image, a_HorzSize, a_VertSize, a_Markers);
-	Exporter.DoExport(a_OutFileName);
+	return Exporter.DoExport();
 }
 
 
@@ -38,10 +56,12 @@ cPngExporter::cPngExporter(cBlockImage & a_BlockImage, int a_HorzSize, int a_Ver
 
 
 
-void cPngExporter::DoExport(const AString & a_OutFileName)
+AString cPngExporter::DoExport()
 {
 	DrawCubes();
-	m_Img.write(a_OutFileName.c_str());
+	std::stringstream ss;
+	m_Img.write_stream(ss);
+	return ss.str();
 }
 
 
