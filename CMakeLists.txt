@@ -16,6 +16,9 @@ endif()
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/zlib/CMakeLists.txt)
 	message(FATAL_ERROR "zlib is missing in folder lib/zlib. Have you initialized the submodules / downloaded the extra libraries?")
 endif()
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/jsoncpp/CMakeLists.txt)
+	message(FATAL_ERROR "jsoncpp is missing in folder lib/jsoncpp. Have you initialized the submodules / downloaded the extra libraries?")
+endif()
 
 # Use static CRT in MSVC builds:
 if (MSVC)
@@ -56,6 +59,12 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11 -pthread")
 endif()
 
+# CMake 3.5.2+ warns when getting the LOCATION property from a target, because it may not be available at generate-time under some special circumstances
+# We need to read the zlib's LOCATION so that we can point libPNG's ZLIB support there, and we know it's a safe operation, hence we disable the warning:
+if (POLICY CMP0026)
+	cmake_policy(SET CMP0026 OLD)
+endif()
+
 # Include the libraries:
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/lib/zlib")
 add_subdirectory(lib/zlib EXCLUDE_FROM_ALL)
@@ -70,6 +79,9 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}/lib/libpng")
 add_subdirectory(lib/libpng EXCLUDE_FROM_ALL)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/libpng")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/pngpp")
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/jsoncpp/include")
+add_subdirectory(lib/jsoncpp EXCLUDE_FROM_ALL)
 
 # Include the shared files:
 set(SHARED_SRC
@@ -139,6 +151,7 @@ set(SOURCES
 	src/BlockImage.cpp
 	src/Globals.cpp
 	src/InputStream.cpp
+	src/JsonNet.cpp
 	src/Marker.cpp
 	src/PngExporter.cpp
 	src/SchematicToPng.cpp
@@ -148,6 +161,7 @@ set(HEADERS
 	src/BlockImage.h
 	src/Globals.h
 	src/InputStream.h
+	src/JsonNet.h
 	src/Marker.h
 	src/PngExporter.h
 	src/SchematicToPng.h
@@ -173,5 +187,16 @@ add_executable(SchematicToPng
 	${SHARED_OSS_HDR}
 )
 
-target_link_libraries(SchematicToPng zlibstatic png15_static)
+target_link_libraries(SchematicToPng zlibstatic png15_static jsoncpp_lib_static)
 
+# Enable the support for solution folders in MSVC
+if (MSVC)
+	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
+
+set_target_properties(
+	zlibstatic
+	png15_static
+	jsoncpp_lib_static
+	PROPERTIES FOLDER Lib
+)

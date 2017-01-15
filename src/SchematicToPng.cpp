@@ -13,6 +13,7 @@
 #include "zlib/zlib.h"
 #include "BlockImage.h"
 #include "PngExporter.h"
+#include "JsonNet.h"
 
 #ifndef INVALID_SOCKET
 	#define INVALID_SOCKET static_cast<SOCKET>(-1)
@@ -105,6 +106,20 @@ bool cSchematicToPng::Init(int argc, char ** argv)
 				else
 				{
 					StartNetServer(Port);
+				}
+				i++;
+				m_KeepRunning = true;
+			}
+			else if ((NoCaseCompare(argv[i], "-jsonnet") == 0) && (i < argc - 1))
+			{
+				UInt16 Port;
+				if (!StringToInteger(argv[i + 1], Port))
+				{
+					std::cerr << "Cannot parse port number from parameter " << argv[i + 1] << std::endl;
+				}
+				else
+				{
+					m_KeepRunning = cJsonNet::Start(Port) || m_KeepRunning;
 				}
 				i++;
 				m_KeepRunning = true;
