@@ -1,10 +1,12 @@
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.2)
 
 project (SchematicToPng)
 
 # Without this, the MSVC variable isn't defined for MSVC builds ( http://www.cmake.org/pipermail/cmake/2011-November/047130.html )
 enable_language(CXX C)
+
+set (CMAKE_CXX_STANDARD 11)
 
 # Check that the libraries are present:
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/libpng/CMakeLists.txt)
