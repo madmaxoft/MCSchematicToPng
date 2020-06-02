@@ -5,6 +5,8 @@
 
 #include "Globals.h"
 #include <fstream>
+#include <thread>
+#include <functional>
 #include "SchematicToPng.h"
 #include "OSSupport/GZipFile.h"
 #include "WorldStorage/FastNBT.h"

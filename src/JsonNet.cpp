@@ -12,6 +12,8 @@ Upon connection, the server first sends a json message containing its version.
 #include "Globals.h"
 #include "JsonNet.h"
 #include <sstream>
+#include <thread>
+#include <functional>
 #include "json/json.h"
 #include "WorldStorage/FastNBT.h"
 #include "StringCompression.h"
